@@ -36,6 +36,15 @@ float radians2Degrees(float radians)
     return radians * 180.0f / PI;
 }
 
+bool isMouseOverRectV(Vector2 rectSize, Vector2 rectPos)
+{
+    Vector2 const mousePos = GetMousePosition();
+    return mousePos.x > rectPos.x &&
+           mousePos.x < rectPos.x + rectSize.x &&
+           mousePos.y > rectPos.y &&
+           mousePos.y < rectPos.y + rectSize.y;
+}
+
 bool isMouseOverRect(const Rectangle* rect)
 {
     Vector2 mousePos = GetMousePosition();

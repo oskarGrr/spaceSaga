@@ -34,5 +34,6 @@ Vector2 rotateVector2AroundPoint(const Vector2* vec,
     const Vector2* rotationPoint, float radians);
 
 bool isMouseOverRect(const Rectangle*);
+bool isMouseOverRectV(Vector2 rectSize, Vector2 rectPos);
 
 #endif

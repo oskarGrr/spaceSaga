@@ -1,5 +1,6 @@
-#include <time.h>//time()
-#include <stdlib.h>//srand()
+#include <time.h> //time()
+#include <stdlib.h> //srand()
+#include <stdio.h>
 #include "raylib.h"
 #include "Player.h"
 #include "windowSize.h"
@@ -14,19 +15,18 @@ static void gameLoop(void);
 
 //Helper functions to reduce gameLoop()'s size.
 static void handleInput(Player*, float dt);
-static void drawEverything(const Player* player, Texture2D* background, bool endPopupIsOpen);
+static int drawEverything(const Player* player, Texture2D* background, bool endPopupIsOpen);
 static bool detectCollisionsHelper(void);//Returns true if all the invaders have been eliminated.
-
-//Helper function to reduce drawEverything()'s size.
-static void drawEndPopup(void);
 
 int main(void)
 {
     srand((unsigned)time(NULL));
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Space Saga");
     InitAudioDevice();
-    SetTargetFPS(60); 
+    SetTargetFPS(60);
+    
     gameLoop();
+    
     CloseAudioDevice();
     CloseWindow();
     return 0;
@@ -42,25 +42,31 @@ static void gameLoop(void)
     playerCtor(&player);
     Texture2D mainBackground = LoadTexture("resources/textures/mainGameBackground.png");
     
-    bool endPopupIsOpen = true;
-    while(!WindowShouldClose())
+    bool isGameOver = false;
+    while( ! WindowShouldClose() )
     {
-        if(!endPopupIsOpen)
+        int endPopupResult = drawEverything(&player, &mainBackground, isGameOver);
+
+        if( ! isGameOver )
         {
             float dt = GetFrameTime();
             handleInput(&player, dt);
             updateBulletPositions(dt);
             updateInvaders(dt);
             updateTurrets(&player.position, dt);
+            
+            //If all the invaders have been elmininated.
+            if(detectCollisionsHelper()) { isGameOver = true; }
         }
-        
-        //If all the invaders have been elmininated.
-        if(detectCollisionsHelper())
+        else
         {
-            endPopupIsOpen = true;
+            if(endPopupResult == -1) { break; } //quit button was pressed
+            else if(endPopupResult == 1) //reset button was pressed
+            {
+                //resetGame();
+                isGameOver = false;
+            }
         }
-        
-        drawEverything(&player, &mainBackground, endPopupIsOpen);
     }
     
     UnloadTexture(player.texture);
@@ -115,8 +121,51 @@ static void handleInput(Player* player, float dt)
     }
 }
 
-//Helper func to reduce gameLoop()'s size.
-static void drawEverything(const Player* player, Texture2D* background, bool endPopupIsOpen)
+//returns -1 if user presses the quit button.
+//returns 1 if the user presses the reset button.
+//returns 0 if the user has not yet pressed the reset or quit button.
+int drawEndPopup(int screenW, int screenH)
+{
+    Vector2 const popupSize = {screenW / 5.0f, screenH / 5.0f};
+    Vector2 const popupPos = {screenW / 2 - popupSize.x / 2, screenH / 2 - popupSize.y / 2};
+    
+    Vector2 const buttonSize = {popupSize.x * .8f, popupSize.y / 3};
+    Vector2 const quitPos = {popupPos.x + popupSize.x * .1f, popupPos.y + buttonSize.y * 0.33f};
+    Vector2 const resetPos = {quitPos.x, popupPos.y + buttonSize.y * 1.66f};
+    
+    char const* resetTxt = "Reset";
+    char const* quitTxt = "Quit";
+    float const fontSize = 22.0f;
+    int const resetTxtSize = MeasureText(resetTxt, fontSize);
+    int const quitTxtSize = MeasureText(quitTxt, fontSize);
+    
+    bool const isMouseOverReset = isMouseOverRectV(buttonSize, resetPos);
+    bool const isMouseOverQuit = isMouseOverRectV(buttonSize, quitPos);
+    
+    if(IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        if(isMouseOverReset) { return 1; }
+        else if(isMouseOverQuit) { return -1; }
+    }
+    
+    Color const quitColor = isMouseOverQuit ? GRAY : LIGHTGRAY;
+    Color const resetColor = isMouseOverReset ? GRAY : LIGHTGRAY;
+    
+    DrawRectangleV(popupPos, popupSize, DARKGRAY);
+    DrawRectangleV(resetPos, buttonSize, resetColor);
+    DrawRectangleV(quitPos, buttonSize, quitColor);
+    
+    DrawText(resetTxt, resetPos.x + buttonSize.x / 2 - resetTxtSize / 2,
+        resetPos.y + buttonSize.y / 2 - fontSize / 2, fontSize, BLACK);
+    
+    DrawText(quitTxt, quitPos.x + buttonSize.x / 2 - quitTxtSize / 2,
+        quitPos.y + buttonSize.y / 2 - fontSize / 2, fontSize, BLACK);
+    
+    return 0;
+}
+
+//Returns the result of drawEndPopup();
+static int drawEverything(const Player* player, Texture2D* background, bool isGameOver)
 {
     BeginDrawing();
     ClearBackground(BLACK);
@@ -128,55 +177,10 @@ static void drawEverything(const Player* player, Texture2D* background, bool end
     drawPlayer(player);
     playAllActiveExplosionAnimations(GetFrameTime());
     
-    if(endPopupIsOpen)
-        drawEndPopup();
+    int endPopupResult = 0;
+    if(isGameOver) { endPopupResult = drawEndPopup(WINDOW_WIDTH, WINDOW_HEIGHT); }
     
     EndDrawing();
-}
-
-//Helper function to reduce drawEverything()'s size.
-static void drawEndPopup(void)
-{
-    Rectangle popup =
-    {
-        .width = WINDOW_WIDTH * 0.25f, 
-        .height = WINDOW_HEIGHT * 0.18f
-    };
     
-    popup.y = WINDOW_HEIGHT * 0.5f - popup.height * 0.5f;
-    popup.x = WINDOW_WIDTH * 0.5f - popup.width * 0.5f;
-    
-    //Draw the popup background rectangle.
-    DrawRectangle(popup.x, popup.y, popup.width, popup.height, DARKGRAY);
-    
-    const Rectangle quitButton =
-    {
-        .x = popup.x + popup.width * 0.1f,
-        .y = popup.y + popup.height * 0.11f,
-        .width = popup.width * 0.8f,
-        .height = popup.height * 0.33f
-    };
-    
-    Rectangle restartButton = quitButton;
-    restartButton.y += quitButton.height + popup.height * 0.11f;
-    
-    const Color quitColor = isMouseOverRect(&quitButton) ? LIGHTGRAY : GRAY;
-    const Color restartColor = isMouseOverRect(&restartButton) ? LIGHTGRAY : GRAY;
-    
-    const int fontSize = 18;
-    const int halfTextHeight = GetFontDefault().baseSize / 2;
-    int halfTextWidth = MeasureText("Quit", fontSize) / 2;
-    
-    //Draw the quit button.
-    DrawRectangle(quitButton.x, quitButton.y, quitButton.width,
-        quitButton.height, quitColor);
-    DrawText("Quit", quitButton.x + quitButton.width * 0.5f - halfTextWidth,
-        quitButton.y + quitButton.height * 0.5f - halfTextHeight, fontSize, WHITE);
-    
-    //Draw the restart button.
-    DrawRectangle(restartButton.x, restartButton.y, restartButton.width, 
-        restartButton.height, restartColor);
-    halfTextWidth = MeasureText("Restart", fontSize) * 0.5f;
-    DrawText("Restart", restartButton.x + restartButton.width * 0.5f - halfTextWidth, 
-       restartButton.y + restartButton.height * 0.5f - halfTextHeight, fontSize, WHITE);
+    return endPopupResult;
 }

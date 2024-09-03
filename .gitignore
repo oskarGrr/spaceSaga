@@ -1,2 +1,7 @@
-obj/*.o
-bin/*.exe
+vcpkg_installed/
+mingwBuild/
+VSBuild/
+src/GPATH
+src/GRTAGS
+src/GTAGS
+src/NppGTags.cfg

@@ -106,13 +106,14 @@ void drawInvaders(void)
         Vector2 texturePosition;
         texturePosition.x = ib[i].pos.x - it[ib[i].type].width * 0.5f;
         texturePosition.y = ib[i].pos.y - it[ib[i].type].height * 0.5f;
-        DrawTextureV(it[ib[i].type], texturePosition, WHITE);
-        
-        for(int j = 0; j < 3; ++j)
+        DrawTextureV(it[ib[i].type], texturePosition, WHITE); 
+#ifndef NDEBUG
+        for(int j = 0; j < INVADER_NUM_HITCIRCLES; ++j)
         {
             DrawCircleLines(ib[i].hitCircles[j].pos.x, 
                 ib[i].hitCircles[j].pos.y, ib[i].hitCircles[j].radius, BLUE);
         }
+#endif
     }
 }
 
@@ -216,7 +217,7 @@ void updateInvaders(float dt)
     Index_t rightOrLeftMost = direction ? findMaxInvader() : findMinInvader();
     float rightOrLeftMostWidth = sTextures[sInvaderBuffer[rightOrLeftMost].type].width;
     
-    if(!isInvaderOnScreen(direction, sInvaderBuffer + rightOrLeftMost, rightOrLeftMostWidth))
+    if( ! isInvaderOnScreen(direction, sInvaderBuffer + rightOrLeftMost, rightOrLeftMostWidth) )
     {
         direction = !direction;
         isCurrentlyLowering = true;

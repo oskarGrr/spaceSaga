@@ -4,6 +4,7 @@
 #include "Utilities.h"
 #include "Bullet.h"
 #include "Turret.h"
+#include "Player.h"
 
 static bool areCirclesColliding(const Circle* c0, const Circle* c1)
 {
@@ -49,15 +50,27 @@ static int checkPlayerBulletVsTurrets(const Bullet* playerBullet)
     return -1;
 }
 
+static bool checkEnemyBulletVsPlayer(Bullet const* enemyBullet, Player const* p)
+{
+    for(int i = 0; i < PLAYER_NUM_HIT_CIRCLES; ++i)
+    {
+        if(areCirclesColliding(p->hitCircles + i, &enemyBullet->hitCircle))
+            return true;
+    }
+
+    return false;
+}
+
 //Detects collisions between enemies and the player's bullets. Also detects collisions between
 //the enemy bullets and the player. outCollisionInfo is filled in as a CollisionInfo 
 //structure (defined in Collision.h), and contains information about the collision.
 //A bool is also returned to determine whether or not a collision happened at all.
-bool detectCollisions(CollisionInfo* outCollisionInfo)
+//If the player gets hit then outCollisionInfo->idxOfEntityThatWasHit should be ignored, but it will be set to 0.
+bool detectCollisions(CollisionInfo* outCollisionInfo, Player const* p)
 {
     size_t numActiveBullets = 0;
     const Bullet* bullets = getBulletsConstRef(&numActiveBullets);
-    
+
     for(int i = 0; i < numActiveBullets; ++i)
     {
         if(bullets[i].type == PLAYER_BULLET)
@@ -90,7 +103,13 @@ bool detectCollisions(CollisionInfo* outCollisionInfo)
         }
         else//if type == INVADER_BULLET || type == TURRET_BULLET
         {
-            //checkEnemyBulletVsPlayer();
+            bool const wasPlayerHit = checkEnemyBulletVsPlayer(bullets + i, p);
+            if(wasPlayerHit)
+            {
+                outCollisionInfo->idxOfBullet = i;
+                outCollisionInfo->typeOfEntityThatWasHit = PLAYER_WAS_HIT;
+                return true;
+            }
         }
     }
     

@@ -2,6 +2,7 @@
 #define COLLISION_H
 #include "raylib.h"
 #include "Utilities.h"
+#include "Player.h"
 #include <stdbool.h>
 
 //Returned as an out paramater from detectCollisions().
@@ -21,6 +22,6 @@ typedef struct
 //Detects collisions between enemies and the player's bullets. Also detects collisions between
 //the enemy bullets and the player. outCollisionInfo is filled in as an out param, and
 //a bool is returned to determine whether or not a collision happened.
-bool detectCollisions(CollisionInfo* outCollisionInfo);
+bool detectCollisions(CollisionInfo* outCollisionInfo, Player const* p);
 
 #endif

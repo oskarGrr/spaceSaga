@@ -16,7 +16,7 @@ static void gameLoop(void);
 //Helper functions to reduce gameLoop()'s size.
 static void handleInput(Player*, float dt);
 static int drawEverything(const Player* player, Texture2D* background, bool endPopupIsOpen);
-static bool detectCollisionsHelper(void);//Returns true if all the invaders have been eliminated.
+static bool detectCollisionsHelper(Player* player);//Returns true if all the invaders have been eliminated.
 
 int main(void)
 {
@@ -55,8 +55,8 @@ static void gameLoop(void)
             updateInvaders(dt);
             updateTurrets(&player.position, dt);
             
-            //If all the invaders have been elmininated.
-            if(detectCollisionsHelper()) { isGameOver = true; }
+            //If all the invaders have been elmininated or if the player has exhausted all of their lives.
+            if(detectCollisionsHelper(&player)) { isGameOver = true; }
         }
         else
         {
@@ -78,24 +78,30 @@ static void gameLoop(void)
 }
 
 //Helper func to reduce gameLoop()'s size.
-//Returns true if all the invaders have been eliminated
-static bool detectCollisionsHelper(void)
+//Returns true if all the invaders have been eliminated or if
+//the player has exhausted all of their lives.
+static bool detectCollisionsHelper(Player* p)
 {
     CollisionInfo collisionInfo;
-    bool areInvadersDead = false;
-    if(detectCollisions(&collisionInfo))
+    bool areAllInvadersDead = false;
+    bool isPlayerDead = false;
+
+    while(detectCollisions(&collisionInfo, p))
     {
-        if(collisionInfo.typeOfEntityThatWasHit == PLAYER_WAS_HIT) { }
-            //playerCollisionResolution();
+        if(collisionInfo.typeOfEntityThatWasHit == PLAYER_WAS_HIT)
+        {
+            isPlayerDead = playerCollisionResolution(p);
+        }
+
         else if(collisionInfo.typeOfEntityThatWasHit == INVADER_WAS_HIT)
-            areInvadersDead = invaderCollisionResolution(collisionInfo.idxOfEntityThatWasHit);
+            areAllInvadersDead = invaderCollisionResolution(collisionInfo.idxOfEntityThatWasHit);
         else//If a turret was hit.
             turretCollisionResolution(collisionInfo.idxOfEntityThatWasHit);
         
         bulletCollisionResolution(collisionInfo.idxOfBullet);
     }
     
-    return areInvadersDead;
+    return areAllInvadersDead || isPlayerDead;
 }
 
 //Helper func to reduce gameLoop()'s size.
@@ -124,10 +130,10 @@ static void handleInput(Player* player, float dt)
 //returns -1 if user presses the quit button.
 //returns 1 if the user presses the reset button.
 //returns 0 if the user has not yet pressed the reset or quit button.
-int drawEndPopup(int screenW, int screenH)
+int drawEndPopup(void)
 {
-    Vector2 const popupSize = {screenW / 5.0f, screenH / 5.0f};
-    Vector2 const popupPos = {screenW / 2 - popupSize.x / 2, screenH / 2 - popupSize.y / 2};
+    Vector2 const popupSize = {WINDOW_WIDTH / 5.0f, WINDOW_HEIGHT / 5.0f};
+    Vector2 const popupPos = {WINDOW_WIDTH / 2 - popupSize.x / 2, WINDOW_HEIGHT / 2 - popupSize.y / 2};
     
     Vector2 const buttonSize = {popupSize.x * .8f, popupSize.y / 3};
     Vector2 const quitPos = {popupPos.x + popupSize.x * .1f, popupPos.y + buttonSize.y * 0.33f};
@@ -164,6 +170,21 @@ int drawEndPopup(int screenW, int screenH)
     return 0;
 }
 
+void drawPlayerLives(Player const* p)
+{
+    int const fontSize = 30;
+    int const gap = 10;
+    if(p->numLives < 0)//if the player is dead
+    {
+        DrawText("YOU DIED", gap, WINDOW_HEIGHT - fontSize, fontSize, RAYWHITE);
+    }
+    else//if the player is still alive
+    {
+        char const* numPlayerLivesString = TextFormat("%d", p->numLives);
+        DrawText(numPlayerLivesString, gap, WINDOW_HEIGHT - fontSize, fontSize, RAYWHITE);
+    }
+}
+
 //Returns the result of drawEndPopup();
 static int drawEverything(const Player* player, Texture2D* background, bool isGameOver)
 {
@@ -176,9 +197,10 @@ static int drawEverything(const Player* player, Texture2D* background, bool isGa
     drawBullets();
     drawPlayer(player);
     playAllActiveExplosionAnimations(GetFrameTime());
-    
+    drawPlayerLives(player);
+
     int endPopupResult = 0;
-    if(isGameOver) { endPopupResult = drawEndPopup(WINDOW_WIDTH, WINDOW_HEIGHT); }
+    if(isGameOver) { endPopupResult = drawEndPopup(); }
     
     EndDrawing();
     

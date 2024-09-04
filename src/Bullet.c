@@ -43,13 +43,14 @@ static void eraseBullet(Index_t idxOfBulletToErase)
 {
     assert(idxOfBulletToErase < sNumActiveBullets);
     
-    //If the bullet that was hit was the last bullet in the array,  
-    //then don't memcpy since the objects overlap which leads to UB.
+    //If the bullet we are erasing is the "right" most active bullet in the array,
+    //then just --sNumActiveBullets, otherwise replace the bullet we are erasing with the
+    //"right" most bullet then --sNumActiveBullets.
     if(idxOfBulletToErase != sNumActiveBullets - 1)
     {
         memcpy(sBulletBuffer + idxOfBulletToErase, 
             sBulletBuffer + sNumActiveBullets - 1, sizeof(Bullet));
-    }  
+    }
     
     --sNumActiveBullets;
 }
@@ -141,4 +142,9 @@ const Bullet* getBulletsConstRef(size_t* outSize)
 {
     *outSize = sNumActiveBullets;
     return sBulletBuffer;
+}
+
+void resetBullets(void)
+{
+    sNumActiveBullets = 0;
 }

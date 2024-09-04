@@ -16,10 +16,23 @@ static Texture2D sGunTexture, sBaseTexture;
 static size_t sNumAliveTurrets = TURRET_ARRAY_CAPACITY;
 static Turret sTurretBuffer[TURRET_ARRAY_CAPACITY];
 
+void resetTurrets(void)
+{
+    sNumAliveTurrets = TURRET_ARRAY_CAPACITY;
+    initTurrets();
+}
+
 void initTurrets(void)
 {
-    sGunTexture = LoadTexture("resources/textures/turretGun.png");
-    sBaseTexture = LoadTexture("resources/textures/turretBase.png");
+    //resetTurrets() simply calls initTurrets() again, 
+    //so make sure we only load the textures once.
+    static bool haveTexturesBeenLoaded = false;
+    if( ! haveTexturesBeenLoaded )
+    {
+        sGunTexture = LoadTexture("resources/textures/turretGun.png");
+        sBaseTexture = LoadTexture("resources/textures/turretBase.png");
+        haveTexturesBeenLoaded = true;
+    }
     
     const float pixelsBetween = WINDOW_WIDTH / (TURRET_ARRAY_CAPACITY + 1);
     const float pixelsFromTopOfWindow = WINDOW_HEIGHT * 0.07f;

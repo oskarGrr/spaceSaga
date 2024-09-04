@@ -4,9 +4,22 @@
 #include "windowSize.h"
 #include <assert.h>
 
+void resetPlayer(Player* this)
+{
+    playerCtor(this);
+}
+
 void playerCtor(Player* this)
 {
-    this->texture = LoadTexture("resources/textures/playerShip.png");
+    //resetPlayer() simply calls playerCtor() again, 
+    //so check to make sure we don't load the texture more than once.
+    static bool isTextureLoaded = false;
+    if( ! isTextureLoaded )
+    {
+        this->texture = LoadTexture("resources/textures/playerShip.png");
+        isTextureLoaded = true;
+    }
+
     this->position = (Vector2){WINDOW_WIDTH * 0.5f, WINDOW_HEIGHT * 0.85f};
     this->numLives = 3;
     this->velocity = 420.0f;

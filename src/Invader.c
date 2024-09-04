@@ -11,12 +11,20 @@
 
 #define INVADER_BUFFSIZE 21
 #define NUM_INVADER_TYPES 3
+#define INITIAL_INVADER_VELOCITY 30.0f
 
 static Invader sInvaderBuffer[INVADER_BUFFSIZE];
 static size_t sNumAliveInvaders = INVADER_BUFFSIZE;
 static float sShootCooldownTime = 0.8f;//The invaders shoot a bullet every .8 seconds.
 static Texture2D sTextures[NUM_INVADER_TYPES];//invader textures
-static float sInvaderVelocity = 30.0f;
+static float sInvaderVelocity = INITIAL_INVADER_VELOCITY;
+
+void resetInvaders()
+{
+    sNumAliveInvaders = INVADER_BUFFSIZE;
+    sInvaderVelocity = INITIAL_INVADER_VELOCITY;
+    initInvaders();
+}
 
 //helper method for initInvaders()
 //idxOfFrontRow is an index into sInvaderBuffer where the front row invaders should start from.
@@ -70,9 +78,16 @@ static void initBackRowInvaders(const Index_t idxOfBackRow, const float yCoord)
 
 void initInvaders(void)
 {
-    sTextures[BACK_INVADER_TYPE]   = LoadTexture("resources/textures/BackInvader.png");
-    sTextures[MIDDLE_INVADER_TYPE] = LoadTexture("resources/textures/MiddleInvader.png");
-    sTextures[FRONT_INVADER_TYPE]  = LoadTexture("resources/textures/FrontInvader.png");
+    //initInvaders() gets called more than once (if resetInvaders() gets called)
+    //so check if we have already loaded the textures.
+    static bool areTexturesInitialized = false;
+    if( ! areTexturesInitialized )
+    {
+        sTextures[BACK_INVADER_TYPE]   = LoadTexture("resources/textures/BackInvader.png");
+        sTextures[MIDDLE_INVADER_TYPE] = LoadTexture("resources/textures/MiddleInvader.png");
+        sTextures[FRONT_INVADER_TYPE]  = LoadTexture("resources/textures/FrontInvader.png");
+        areTexturesInitialized = true;
+    }
     
     //Where the invaders start from (from the top of the window).
     float yCoordOfBackRow = WINDOW_HEIGHT * 0.16f;

@@ -43,4 +43,6 @@ void unloadBulletTextures(void);
 //outSize is filled in with the current number of active bullets.
 const Bullet* getBulletsConstRef(size_t* outSize);
 
+void resetBullets(void);
+
 #endif

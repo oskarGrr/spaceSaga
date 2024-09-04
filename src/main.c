@@ -32,6 +32,14 @@ int main(void)
     return 0;
 }
 
+static void resetGame(Player* p)
+{
+    resetBullets();
+    resetInvaders();
+    resetPlayer(p);
+    resetTurrets();
+}
+
 static void gameLoop(void)
 {
     initExplosionsResources();
@@ -63,7 +71,7 @@ static void gameLoop(void)
             if(endPopupResult == -1) { break; } //quit button was pressed
             else if(endPopupResult == 1) //reset button was pressed
             {
-                //resetGame();
+                resetGame(&player);
                 isGameOver = false;
             }
         }
@@ -89,10 +97,7 @@ static bool detectCollisionsHelper(Player* p)
     while(detectCollisions(&collisionInfo, p))
     {
         if(collisionInfo.typeOfEntityThatWasHit == PLAYER_WAS_HIT)
-        {
             isPlayerDead = playerCollisionResolution(p);
-        }
-
         else if(collisionInfo.typeOfEntityThatWasHit == INVADER_WAS_HIT)
             areAllInvadersDead = invaderCollisionResolution(collisionInfo.idxOfEntityThatWasHit);
         else//If a turret was hit.

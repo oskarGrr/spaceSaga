@@ -18,6 +18,7 @@ typedef struct
     Circle hitCircles[PLAYER_NUM_HIT_CIRCLES];
 } Player;
 
+void resetPlayer(Player*);
 void playerCtor(Player*);
 void playerPositionUpdate(Player*, LeftOrRight, float dt);
 bool playerCollisionResolution(Player*);

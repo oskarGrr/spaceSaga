@@ -41,5 +41,6 @@ void drawInvaders(void);
 void initInvaders(void);
 void unloadInvaderTextures(void);
 void updateInvaders(float dt);
+void resetInvaders(void);
 
 #endif

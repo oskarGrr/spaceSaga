@@ -25,6 +25,9 @@ typedef struct
     Circle hitCircles[INVADER_NUM_HITCIRCLES];
 } Invader;
 
+//get the lowest invader's Y coord (of the bottom of the texture).
+float getLowestTextureYCoord(void);
+
 size_t getNumAliveInvaders(void);
 
 //Returns a const reference to the array of hitCircle's for a given index 

@@ -17,6 +17,7 @@ static void gameLoop(void);
 static void handleInput(Player*, float dt);
 static int drawEverything(const Player* player, Texture2D* background, bool endPopupIsOpen);
 static bool detectCollisionsHelper(Player* player);//Returns true if all the invaders have been eliminated.
+static bool checkIfInvadersWon(Player const* player);//Have the invaders gone low enough to pass the player.
 
 int main(void)
 {
@@ -63,8 +64,11 @@ static void gameLoop(void)
             updateInvaders(dt);
             updateTurrets(&player.position, dt);
             
-            //If all the invaders have been elmininated or if the player has exhausted all of their lives.
-            if(detectCollisionsHelper(&player)) { isGameOver = true; }
+            //If all the invaders have been elmininated, or
+            //if the player has exhausted all of their lives, 
+            //or if the invaders have gone low enough to pass the player.
+            if(detectCollisionsHelper(&player) || checkIfInvadersWon(&player)) 
+                isGameOver = true;
         }
         else
         {
@@ -107,6 +111,18 @@ static bool detectCollisionsHelper(Player* p)
     }
     
     return areAllInvadersDead || isPlayerDead;
+}
+
+//Have the invaders gone low enough to pass the player.
+static bool checkIfInvadersWon(Player const* p)
+{
+    float const lowestInvader = getLowestTextureYCoord();
+    float const playerYLevel  = getPlayerTopOfTextureYCoord(p);
+    
+    if(lowestInvader >= playerYLevel)
+        return true;
+
+    return false;
 }
 
 //Helper func to reduce gameLoop()'s size.

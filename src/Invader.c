@@ -158,6 +158,20 @@ bool invaderCollisionResolution(Index_t idxOfHitInvader)
     return sNumAliveInvaders == 0;
 }
 
+//get the lowest invader's Y coord (the bottom of the texture).
+float getLowestTextureYCoord(void)
+{
+    float lowest = 0.0f;
+    for(int i = 0; i < sNumAliveInvaders; ++i)
+    {
+        float const halfTextureHeight = sTextures[sInvaderBuffer[i].type].height * 0.5f;
+        if(sInvaderBuffer[i].pos.y + halfTextureHeight > lowest)
+            lowest = sInvaderBuffer[i].pos.y + halfTextureHeight;
+    }
+
+    return lowest;
+}
+
 //finds the index of the invader with the largest x coord
 static Index_t findMaxInvader(void)
 {

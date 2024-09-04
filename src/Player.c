@@ -114,3 +114,8 @@ void drawPlayer(const Player* this)
         DrawCircleLinesV(this->hitCircles[i].pos, this->hitCircles[i].radius, RED);
 #endif
 }
+
+float getPlayerTopOfTextureYCoord(Player const* this)
+{
+    return this->position.y - this->texture.height * 0.5f;
+}
